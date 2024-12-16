@@ -7,7 +7,26 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
-from .forms import SignUpForm, UpdateUserForm, ChangePasswordForm
+from .forms import SignUpForm, UpdateUserForm, ChangePasswordForm, UserInfoForm
+from django.db.models import Q
+import json
+from cart.cart import Cart
+
+
+def search(request):
+    # Determine if they filled out the form
+    if request.method == "POST":
+        searched = request.POST['searched']
+        #search query for the product DB Model
+        searched = Product.objects.filter(Q(name__icontains=searched) | Q(description__icontains=searched)) #icontains case sensitive either upper or lower case. why Q is use to query multiple with filter.
+        # test for null products
+        if not searched:
+           messages.success(request, "That Product Does not Exist... Please go to the Categories")
+           return render(request, "search.html", {})
+        else:
+            return render(request, "search.html", {'searched': searched})
+    else:
+        return render(request, "search.html", {})
 
 
 def update_user(request):
@@ -54,6 +73,21 @@ def update_password(request):
 
 
 
+def update_info(request):
+    if request.user.is_authenticated:
+        current_user = Profile.objects.get(user__id=request.user.id)
+        form = UserInfoForm(request.POST or None, instance=current_user)
+
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Your Info Has Been Updated!")
+            return redirect('home')
+        return render(request, "update_info.html", {'form':form})
+    else:
+        messages.success(request, "You have to be Logged In to access this Page!!")
+        return redirect('home')
+
+
 def category(request,catry):
     # replace hyphens with Spaces
     catry = catry.replace('-', ' ')
@@ -92,6 +126,22 @@ def login_user(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
+
+            # Do some shopping cart stuff
+            current_user = Profile.objects.get(user__id=request.user.id)
+            # Get their saved cart from database
+            saved_cart = current_user.old_cart
+            # Convert database string to python dictionary
+            if saved_cart:
+                # convert to dictionary using JSON
+                converted_cart = json.loads(saved_cart)
+                # Add the loaded cart dictionary to our session
+                # Get the cart
+                cart = Cart(request)
+                # loop through the cart and add the items from the database
+                for key,value in converted_cart.items():
+                    cart.db_add(product=key, quantity=value)
+
             messages.success(request, ("You have been logging"))
             return redirect('home')
         else:
@@ -118,8 +168,8 @@ def register_user(request):
             # log in user
             user = authenticate(username=username, password=password)
             login(request, user)
-            messages.success(request, ("You have been Registered Successful.. "))
-            return redirect('home')
+            messages.success(request, ("User Created Successful -- Please Completed the Form Below.. "))
+            return redirect('update_info')
         else:
             messages.success(request, ("Whoops! There problem registering your account. Try again!!"))
             return redirect('register')
