@@ -89,6 +89,7 @@ def process_order(request):
             create_order = Order(user=user, full_name=full_name, email=email, shipping_address=shipping_address, amount_paid=amount_paid)
             create_order.save()
 
+
             # Add order items
             # Get the order ID
             order_id = create_order.pk
@@ -113,6 +114,8 @@ def process_order(request):
 
             messages.success(request, "Order Placed!")
             return redirect('home')
+
+        
         else:
             # not logged in
             # create Order
