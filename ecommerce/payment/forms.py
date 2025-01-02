@@ -2,7 +2,7 @@ from django import forms
 from .models import ShippingAddress
 
 
-class ShippingForm(forms.ModelForm):
+class ShippingForm(forms.ModelForm):  #using modelform it save the shipping detail to the db
     shipping_full_name = forms.CharField(label="", widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Full Name'}), required=True)
     shipping_email = forms.CharField(label="", widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Email Address'}), required=True)
     shipping_address1 = forms.CharField(label="", widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Address 1'}), required=True)
@@ -18,7 +18,7 @@ class ShippingForm(forms.ModelForm):
 
         exclude = ['user',]
 
-class PaymentForm(forms.Form):
+class PaymentForm(forms.Form):  #using form not save the credit detail on our db because of the law of country.
     card_name = forms.CharField(label="", widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Name On Card'}), required=True)
     card_number = forms.CharField(label="", widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Card Number'}), required=True)
     card_exp_date = forms.CharField(label="", widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Expiration Date'}), required=True)

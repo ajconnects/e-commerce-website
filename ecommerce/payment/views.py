@@ -5,6 +5,10 @@ from payment.forms import ShippingForm, PaymentForm
 from payment.models import ShippingAddress, Order, OrderItem
 from django.contrib.auth.models import User
 from store.models import Product
+import logging
+
+
+#logger = logging.getLogger(__name__)
 
 def payment_success(request):
     return render(request, 'payment/payment_success.html', {})
@@ -29,35 +33,6 @@ def checkout(request):
         # checkout as guest
         shipping_form = ShippingForm(request.POST or None,)
         return render(request, "payment/checkout.html", {"cart_products":cart_products, "quantities":quantities, "totals":totals, "shipping_form":shipping_form})
-
-
-def billing_info(request):
-    if request.POST:
-        # Get the cart
-        cart = Cart(request)
-        cart_products = cart.get_prods
-        quantities = cart.get_quants
-        totals = cart.cart_total()
-
-        # Create a session with shipping Info
-        my_shipping = request.POST
-        request.session['my_shipping'] = my_shipping
-
-        # check to see if user is logged in
-        if request.user.is_authenticated:
-            # Get the billing form
-            billing_form = PaymentForm()
-            return render(request, "payment/billing_info.html", {"cart_products":cart_products, "quantities":quantities, "totals":totals, "shipping_info":request.POST, "billing_form":billing_form})
-        else:
-            # Not logged in
-            billing_form = PaymentForm()
-            return render(request, "payment/billing_info.html", {"cart_products":cart_products, "quantities":quantities, "totals":totals, "shipping_info":request.POST, "billing_form":billing_form})
-
-        shipping_form = request.POST
-        return render(request, "payment/billing_info.html", {"cart_products":cart_products, "quantities":quantities, "totals":totals, "shipping_form":shipping_form})
-    else:
-        messages.success(request, "Access Denied")
-        return redirect('home')
 
 
 def process_order(request):
@@ -115,7 +90,7 @@ def process_order(request):
             messages.success(request, "Order Placed!")
             return redirect('home')
 
-        
+
         else:
             # not logged in
             # create Order
@@ -150,3 +125,34 @@ def process_order(request):
     else:
         messages.success(request, "Access Denied")
         return redirect('home')
+
+
+def billing_info(request):
+    if request.POST:
+        # Get the cart
+        cart = Cart(request)
+        cart_products = cart.get_prods
+        quantities = cart.get_quants
+        totals = cart.cart_total()
+
+        # Create a session with shipping Info
+        my_shipping = request.POST  #fix to convert
+        #my_shipping = request.POST.dict()
+        request.session['my_shipping'] = my_shipping
+
+        # check to see if user is logged in
+        if request.user.is_authenticated:
+            # Get the billing form
+            billing_form = PaymentForm()
+            return render(request, "payment/billing_info.html", {"cart_products":cart_products, "quantities":quantities, "totals":totals, "shipping_info":request.POST, "billing_form":billing_form})
+        else:
+            # Not logged in
+            billing_form = PaymentForm()
+            return render(request, "payment/billing_info.html", {"cart_products":cart_products, "quantities":quantities, "totals":totals, "shipping_info":request.POST, "billing_form":billing_form})
+
+        # shipping_form = request.POST
+        # return render(request, "payment/billing_info.html", {"cart_products":cart_products, "quantities":quantities, "totals":totals, "shipping_form":shipping_form})
+    else:
+        messages.success(request, "Access Denied")
+        return redirect('home')
+
