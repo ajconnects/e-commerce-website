@@ -97,7 +97,10 @@ DATABASES = {
         "USER": "postgres",
         "PASSWORD": os.environ.get("DB_PASSWORD_EC"),
         "HOST": "junction.proxy.rlwy.net",
-        "PORT": "2635",
+        "PORT": "26353",
+        "OPTIONS": {
+            "connect_timeout": 20, #Timeout in seconds
+        },
     }
 }
 
